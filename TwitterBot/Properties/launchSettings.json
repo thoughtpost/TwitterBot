@@ -3,7 +3,7 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:51554",
+      "applicationUrl": "https://localhost:44375/",
       "sslPort": 44375
     }
   },
@@ -12,7 +12,7 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      "launchUrl": "webhook",
+      "launchUrl": "webhook/?crc_token=ABC",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

@@ -17,6 +17,8 @@ using Newtonsoft.Json.Linq;
 using Thoughtpost;
 using Microsoft.Extensions.Configuration;
 
+using Thoughtpost.Twitter.Models;
+
 namespace Thoughtpost.Twitter
 {
     public class TwitterApp
@@ -31,7 +33,6 @@ namespace Thoughtpost.Twitter
         {
             get
             {
-                //return Thoughtpost.ConfigurationHelper.GlobalConfigurationHelper.GetSetting("Twitter:ConsumerKey");
                 return Configuration.GetSection("Twitter")["ConsumerKey"];
             }
         }
@@ -40,7 +41,6 @@ namespace Thoughtpost.Twitter
         {
             get
             {
-                //return Thoughtpost.ConfigurationHelper.GlobalConfigurationHelper.GetSetting("Twitter:ConsumerSecret");
                 return Configuration.GetSection("Twitter")["ConsumerSecret"];
             }
         }
@@ -49,7 +49,6 @@ namespace Thoughtpost.Twitter
         {
             get
             {
-                //return Thoughtpost.ConfigurationHelper.GlobalConfigurationHelper.GetSetting("Twitter:AdminUserAccessToken");
                 return Configuration.GetSection("Twitter")["AdminUserAccessToken"];
             }
         }
@@ -58,7 +57,6 @@ namespace Thoughtpost.Twitter
         {
             get
             {
-                //return Thoughtpost.ConfigurationHelper.GlobalConfigurationHelper.GetSetting("Twitter:AdminUserAccessTokenSecret");
                 return Configuration.GetSection("Twitter")["AdminUserAccessTokenSecret"];
             }
         }
@@ -79,6 +77,14 @@ namespace Thoughtpost.Twitter
             }
         }
 
+        public string AppName
+        {
+            get
+            {
+                return Configuration.GetSection("Twitter")["AppName"];
+            }
+        }
+
         public string UserAccessToken { get; set; }
         public string UserAccessTokenSecret { get; set; }
 
@@ -90,8 +96,7 @@ namespace Thoughtpost.Twitter
 
         public async Task<byte[]> GetBytes(string url)
         {
-            //string authHeader = Build(HttpMethod.Post, oAuthUrl);
-            string authHeader = GenerateAuthorizationHeaderPlus(url, "GET");
+            string authHeader = GenerateAuthorizationHeader(url, "GET");
 
             HttpResponseMessage response;
             using (HttpClient client = new HttpClient())
@@ -110,8 +115,7 @@ namespace Thoughtpost.Twitter
 
         public async Task<string> Get( string url )
         {
-            //string authHeader = Build(HttpMethod.Post, oAuthUrl);
-            string authHeader = GenerateAuthorizationHeaderPlus(url, "GET");
+            string authHeader = GenerateAuthorizationHeader(url, "GET");
 
             HttpResponseMessage response;
             using (HttpClient client = new HttpClient())
@@ -131,25 +135,16 @@ namespace Thoughtpost.Twitter
         public async Task<string> GetApi(string url)
         {
             string authHeader = await GetBearerToken();
-            //authHeader = GenerateAuthorizationHeader(url);
 
             string bearer = "Bearer " + authHeader;
 
             HttpWebRequest authRequest = (HttpWebRequest)WebRequest.Create(url);
             authRequest.Headers.Add("Authorization", bearer);
-            //authRequest.Headers.Add("Authorization", authHeader);
             authRequest.Method = "GET";
             authRequest.UserAgent = "OAuth gem v0.4.4";
             authRequest.Host = "api.twitter.com";
-            //authRequest.ContentType = "application/x-www-form-urlencoded;charset=UTF-8";
             authRequest.ServicePoint.Expect100Continue = false;
             authRequest.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-
-            //using (Stream stream = authRequest.GetRequestStream())
-            //{
-            //    byte[] content = Encoding.UTF8.GetBytes(postBody);
-            //    stream.Write(content, 0, content.Length);
-            //}
 
             WebResponse authResponse = authRequest.GetResponse();
 
@@ -166,10 +161,6 @@ namespace Thoughtpost.Twitter
 
         public async Task SendTweet(string message)
         {
-            //string oAuthUrl = "https://api.twitter.com/1.1/statuses/update.json?status = " + Uri.EscapeDataString(message);
-            //string authHeader = Build(HttpMethod.Post, oAuthUrl);
-            //string authHeader2 = GenerateAuthorizationHeader(oAuthUrl);
-
             string oAuthUrl = "https://api.twitter.com/1.1/statuses/update.json";
             string authHeader = GenerateAuthorizationHeaderPlus(message, oAuthUrl, "POST");
             string postBody = "status=" + Uri.EscapeDataString(message);
@@ -193,57 +184,25 @@ namespace Thoughtpost.Twitter
             string jsonResponse = new StreamReader(authResponse.GetResponseStream()).ReadToEnd();
 
             authResponse.Close();
-
-            //HttpResponseMessage response;
-            //using (HttpClient client = new HttpClient())
-            //{
-
-            //    client.DefaultRequestHeaders.Add("Authorization",
-            //        authHeader);
-
-            //    response = await client.PostAsync(oAuthUrl, new StringContent(postBody));
-            //}
-
-            //string jsonResponse = await response.Content.ReadAsStringAsync();
         }
 
 
         public async Task SendDirectMessage(string recipientId, string message)
         {
-            string oAuthUrl = "https://api.twitter.com/1.1/direct_messages/events/new.json";
-            //string authHeader = Build(HttpMethod.Post, oAuthUrl);
-            string authHeader = GenerateAuthorizationHeaderPlus(oAuthUrl, "POST");
-            string postBody = "{\"event\": { \"type\": \"message_create\", " +
-                "\"message_create\": { \"target\": { \"recipient_id\": \"" + recipientId +
-                "\" }, \"message_data\": { \"text\": \"" +
-                message + "\" } } } }";
+            MessageData md = new MessageData() { Text = message };
 
-
-            HttpResponseMessage response;
-            using (HttpClient client = new HttpClient())
-            {
-
-                client.DefaultRequestHeaders.Add("Authorization",
-                    authHeader);
-
-                response = await client.PostAsync(oAuthUrl, new StringContent(postBody,
-                    Encoding.UTF8, "application/json"));
-            }
-
-            string jsonResponse = await response.Content.ReadAsStringAsync();
-
+            await SendDirectMessage(recipientId, md);
         }
-        public async Task SendDirectMessageData(string recipientId, string message_data)
+
+        public async Task SendDirectMessage(string recipientId, MessageData message_data)
         {
-            //string json = JsonConvert.SerializeObject(message_data);
+            string json = JsonConvert.SerializeObject(message_data);
 
             string oAuthUrl = "https://api.twitter.com/1.1/direct_messages/events/new.json";
-            //string authHeader = Build(HttpMethod.Post, oAuthUrl);
-            string authHeader = GenerateAuthorizationHeaderPlus(oAuthUrl, "POST");
+            string authHeader = GenerateAuthorizationHeader(oAuthUrl, "POST");
             string postBody = "{\"event\": { \"type\": \"message_create\", " +
                 "\"message_create\": { \"target\": { \"recipient_id\": \"" + recipientId +
-                "\" }, \"message_data\": " + message_data + "  } } }";
-
+                "\" }, \"message_data\": " + json + "  } } }";
 
             HttpResponseMessage response;
             using (HttpClient client = new HttpClient())
@@ -257,16 +216,11 @@ namespace Thoughtpost.Twitter
             }
 
             string jsonResponse = await response.Content.ReadAsStringAsync();
-
         }
 
 #pragma warning disable 1998
         public async Task SendTyping(string recipientId)
         {
-            //string oAuthUrl = "https://api.twitter.com/1.1/statuses/update.json?status = " + Uri.EscapeDataString(message);
-            //string authHeader = Build(HttpMethod.Post, oAuthUrl);
-            //string authHeader2 = GenerateAuthorizationHeader(oAuthUrl);
-
             string oAuthUrl = "https://api.twitter.com/1.1/direct_messages/indicate_typing.json";
             string authHeader = GenerateAuthorizationHeaderPlus("recipient_id", recipientId, oAuthUrl,
                 "POST");
@@ -291,18 +245,6 @@ namespace Thoughtpost.Twitter
             string jsonResponse = new StreamReader(authResponse.GetResponseStream()).ReadToEnd();
 
             authResponse.Close();
-
-            //HttpResponseMessage response;
-            //using (HttpClient client = new HttpClient())
-            //{
-
-            //    client.DefaultRequestHeaders.Add("Authorization",
-            //        authHeader);
-
-            //    response = await client.PostAsync(oAuthUrl, new StringContent(postBody));
-            //}
-
-            //string jsonResponse = await response.Content.ReadAsStringAsync();
         }
 #pragma warning restore 1998
 
@@ -311,7 +253,6 @@ namespace Thoughtpost.Twitter
             string oAuthUrl = "https://api.twitter.com/1.1/account_activity/all/" + 
                 this.Environment + "/webhooks.json?url=" + Uri.EscapeUriString(hook);
             string authHeader2 = Build(HttpMethod.Post, oAuthUrl);
-            //authHeader2 = GenerateAuthorizationHeaderPlus(oAuthUrl, "POST");
 
             HttpResponseMessage response;
             using (HttpClient client = new HttpClient())
@@ -334,7 +275,7 @@ namespace Thoughtpost.Twitter
             string oAuthUrl = "https://api.twitter.com/1.1/account_activity/all/" + 
                 this.Environment + "/webhooks/" + hookid + ".json";
             string authHeader2 = Build(HttpMethod.Delete, oAuthUrl);
-            authHeader2 = GenerateAuthorizationHeaderPlus(oAuthUrl, "DELETE");
+            authHeader2 = GenerateAuthorizationHeader(oAuthUrl, "DELETE");
 
             HttpResponseMessage response;
             using (HttpClient client = new HttpClient())
@@ -354,7 +295,6 @@ namespace Thoughtpost.Twitter
         {
             string oAuthUrl =  oAuthUrl = "https://api.twitter.com/1.1/account_activity/all/" + 
                 this.Environment + "/subscriptions.json";
-            //string authHeader2 = Build(HttpMethod.Post, oAuthUrl);
             string authHeader2 = GenerateAuthorizationHeader(oAuthUrl);
 
             HttpResponseMessage response;
@@ -376,8 +316,7 @@ namespace Thoughtpost.Twitter
         {
             string oAuthUrl = "https://api.twitter.com/1.1/account_activity/all/" + 
                 this.Environment + "/subscriptions.json";
-            //string authHeader2 = Build(HttpMethod.Post, oAuthUrl);
-            string authHeader2 = GenerateAuthorizationHeaderPlus(oAuthUrl, "DELETE");
+            string authHeader2 = GenerateAuthorizationHeader(oAuthUrl, "DELETE");
 
             HttpResponseMessage response;
             using (HttpClient client = new HttpClient())
@@ -392,32 +331,6 @@ namespace Thoughtpost.Twitter
             string jsonResponse = await response.Content.ReadAsStringAsync();
 
             return jsonResponse;
-        }
-
-        public async Task<string> GetApiV2(string url)
-        {
-            var client = new HttpClient();
-
-            var uri = new Uri(url);
-
-            client.DefaultRequestHeaders.Add("Authorization",
-                string.Format("Bearer {0}", GetBearerToken()));
-
-            HttpResponseMessage response = await client.GetAsync(uri);
-
-            string content = await response.Content.ReadAsStringAsync();
-
-            return content;
-        }
-
-        public async Task<string> GetApiV3(string url)
-        {
-            var client = await CreateHttpClient(OAuthConsumerKey,
-                OAuthConsumerSecret);
-
-            string content = await client.GetStringAsync(url);
-
-            return content;
         }
 
         public static async Task<HttpClient> CreateHttpClient(string consumerKey, string consumerSecret)
@@ -484,13 +397,6 @@ namespace Thoughtpost.Twitter
             return resp;
         }
 
-        public async Task<string> SearchTweets()
-        {
-            string oAuthUrl = "https://api.twitter.com/1.1/search/tweets.json?q=nba";
-            string resp = await GetApiV3(oAuthUrl);
-            return resp;
-        }
-
         public string GenerateAuthorizationHeaderPlus(string status, string oAuthUrl, string verb)
         {
             string signatureMethod = "HMAC-SHA1";
@@ -537,10 +443,10 @@ namespace Thoughtpost.Twitter
 
         public string GenerateAuthorizationHeader(string oAuthUrl)
         {
-            return GenerateAuthorizationHeaderPlus(oAuthUrl, "POST");
+            return GenerateAuthorizationHeader(oAuthUrl, "POST");
         }
 
-        public string GenerateAuthorizationHeaderPlus(string oAuthUrl, string verb)
+        public string GenerateAuthorizationHeader(string oAuthUrl, string verb)
         {
             string signatureMethod = "HMAC-SHA1";
             string version = "1.0";
