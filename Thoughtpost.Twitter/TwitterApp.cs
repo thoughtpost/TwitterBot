@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Thoughtpost;
 using Microsoft.Extensions.Configuration;
 
 using Thoughtpost.Twitter.Models;
@@ -29,6 +28,8 @@ namespace Thoughtpost.Twitter
         }
 
         public IConfiguration Configuration { get; set; }
+
+        #region Keys, Tokens 
         public string OAuthConsumerKey
         {
             get
@@ -87,6 +88,7 @@ namespace Thoughtpost.Twitter
 
         public string UserAccessToken { get; set; }
         public string UserAccessTokenSecret { get; set; }
+        #endregion
 
         public static string Base64Encode(string plainText)
         {
@@ -186,6 +188,73 @@ namespace Thoughtpost.Twitter
             authResponse.Close();
         }
 
+        #region Update media - TODO
+        /*
+        public async Task<string> UploadMediaInit(byte[] data, string mediaType)
+        {
+            string oAuthUrl = "https://upload.twitter.com/1.1/media/upload.json";
+            string authHeader = GenerateAuthorizationHeaderPlus("", oAuthUrl, "POST");
+            string postBody = "command=INIT&total_bytes=" + data.Length.ToString() + "&media_type=" + mediaType;
+
+            HttpWebRequest authRequest = (HttpWebRequest)WebRequest.Create(oAuthUrl);
+            authRequest.Headers.Add("Authorization", authHeader);
+            authRequest.Method = "POST";
+            authRequest.UserAgent = "OAuth gem v0.4.4";
+            authRequest.Host = "upload.twitter.com";
+            authRequest.ContentType = "application/x-www-form-urlencoded;charset=UTF-8";
+            authRequest.ServicePoint.Expect100Continue = false;
+            authRequest.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+
+            using (Stream stream = authRequest.GetRequestStream())
+            {
+                byte[] content = Encoding.UTF8.GetBytes(postBody);
+                stream.Write(content, 0, content.Length);
+            }
+
+            WebResponse authResponse = await authRequest.GetResponseAsync();
+            string jsonResponse = new StreamReader(authResponse.GetResponseStream()).ReadToEnd();
+
+            dynamic response = JObject.Parse(jsonResponse);
+
+            authResponse.Close();
+
+            return response.message_id_string;
+        }
+
+        public async Task<string> UploadMediaAppend(byte[] data, string media_id)
+        {
+            string oAuthUrl = "https://upload.twitter.com/1.1/media/upload.json";
+            string authHeader = GenerateAuthorizationHeaderPlus("", oAuthUrl, "POST");
+            string postBody = "command=APPEND&media_id=" + data.Length.ToString() + "&media_type=" + mediaType;
+
+            HttpWebRequest authRequest = (HttpWebRequest)WebRequest.Create(oAuthUrl);
+            authRequest.Headers.Add("Authorization", authHeader);
+            authRequest.Method = "POST";
+            authRequest.KeepAlive = true;
+            authRequest.UserAgent = "OAuth gem v0.4.4";
+            authRequest.Host = "upload.twitter.com";
+            authRequest.ContentType = "multipart/form-data";
+            authRequest.ServicePoint.Expect100Continue = false;
+            authRequest.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+
+            using (Stream stream = authRequest.GetRequestStream())
+            {
+                byte[] content = Encoding.UTF8.GetBytes(postBody);
+                stream.Write(content, 0, content.Length);
+            }
+
+            WebResponse authResponse = await authRequest.GetResponseAsync();
+            string jsonResponse = new StreamReader(authResponse.GetResponseStream()).ReadToEnd();
+
+            dynamic response = JObject.Parse(jsonResponse);
+
+            authResponse.Close();
+
+            return response.message_id_string;
+        }
+
+    */
+        #endregion
 
         public async Task SendDirectMessage(string recipientId, string message)
         {
@@ -597,6 +666,7 @@ namespace Thoughtpost.Twitter
             TimeSpan diff = date.ToUniversalTime() - origin;
             return Math.Floor(diff.TotalSeconds);
         }
+
         public string AcceptChallenge(string crcToken)
         {
 

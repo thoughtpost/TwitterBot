@@ -14,6 +14,8 @@ namespace Thoughtpost.Twitter.Models
         public string Text { get; set; }
         [JsonProperty("quick_reply")]
         public QuickReply QuickReply { get; set; }
+        [JsonProperty("ctas")]
+        public List<Button> Buttons { get; set; }
     }
 
 

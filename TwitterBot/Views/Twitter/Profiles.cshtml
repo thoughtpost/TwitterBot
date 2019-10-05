@@ -1,0 +1,35 @@
+﻿@model TwitterBot.TwitterProfileModelList
+@{
+    ViewData["Title"] = "Profiles";
+}
+<script>
+function say(id)
+{
+    var xmlHttp = new XMLHttpRequest();
+    var url = "/directmessage/" + id + "/Hi!";
+    console.log(url);
+    xmlHttp.open( "GET", url, false );
+    xmlHttp.send( null );
+}
+</script>
+    <table>
+        <thead>
+            <tr>
+                <th></th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Profiles.Count(); ++i)
+            {
+            <tr>
+                <td><img src="@Model.Profiles[i].ProfilePicUrl" /></td>
+                <td>@Model.Profiles[i].FirstName</td>
+                <td>@Model.Profiles[i].LastName</td>
+                <td><button title="Say Hi!" onclick="say('@Model.Profiles[i].ID');">Say Hi!</button></td>
+            </tr>
+            }
+        </tbody>
+    </table>

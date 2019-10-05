@@ -88,5 +88,9 @@ namespace TwitterBot
         public List<TwitterMessageAttachmentModel> Attachments { get; set; }
     }
 
+    public class TwitterMessageModelList
+    {
+        public List<TwitterMessageModel> Messages { get; set; }
+    }
 
 }

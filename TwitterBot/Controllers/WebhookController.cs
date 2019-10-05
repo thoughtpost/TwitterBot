@@ -132,6 +132,7 @@ namespace TwitterBot.Controllers
                 // We sent this, ignore
                 if (this.App.AdminUserAccessToken.StartsWith(model.SenderId)) return;
 
+                // Tweet the content of the direct message
                 await this.App.SendTweet(model.SenderProfile.FirstName + " told me, \"" + model.Text + "\". " + 
                     model.SenderProfile.ProfilePicUrl );
             }

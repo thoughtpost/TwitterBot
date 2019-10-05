@@ -76,4 +76,10 @@ namespace TwitterBot
         public string ProfilePicUrl { get; set; }
 
     }
+
+    public class TwitterProfileModelList
+    {
+        public List<TwitterProfileModel> Profiles { get; set; }
+    }
+
 }

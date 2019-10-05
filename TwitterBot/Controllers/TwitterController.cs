@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 
 using Thoughtpost.Twitter;
 using Thoughtpost.Twitter.Models;
+using Thoughtpost.Azure;
 
 namespace TwitterBot.Controllers
 {
@@ -77,9 +78,25 @@ namespace TwitterBot.Controllers
         {
             ViewBag.Message = message;
 
-            await this.App.SendDirectMessage(id, message);
+            MessageData mdata = new MessageData();
+            mdata.Text = message;
+
+            await this.App.SendDirectMessage(id, mdata);
 
             return View();
         }
+
+        [HttpGet]
+        [Route("~/profiles")]
+        public async Task<IActionResult> Profiles()
+        {
+            StorageHelper<TwitterProfileModel> storageProfiles = new StorageHelper<TwitterProfileModel>(this.Configuration);
+
+            TwitterProfileModelList profileList = new TwitterProfileModelList();
+            profileList.Profiles = await storageProfiles.Get<TwitterProfileModel>( "twitter", "profiles" );
+
+            return View(profileList);
+        }
+
     }
 }
